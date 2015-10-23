@@ -26,10 +26,10 @@ if __name__ == "__main__":
     file_name = sys.argv[1]
     orig = cv2.imread(file_name, 1)
     gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
-    gray28 = cv2.resize(gray, (28, 28)) / 255.
-    gray28_float = gray28.astype('float32')
-    gray28_float.resize((1, 784))
-    h0 = chainer.Variable(gray28_float)
+    gray_float = gray.astype('float32')
+    gray28 = cv2.resize(gray_float, (28, 28)) / 255.
+    gray28.resize((1, 784))
+    h0 = chainer.Variable(gray28)
     model = pickle.load(open('trained-mnist-model', 'rb'))
     h1 = model.l1(h0)
     h2 = model.l2(h1)
