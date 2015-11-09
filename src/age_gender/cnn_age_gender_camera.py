@@ -22,6 +22,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('model_type', choices=('alexnet', 'caffenet', 'googlenet'),
                     help='Model type (alexnet, caffenet, googlenet)')
 parser.add_argument('model', help='Path to the pretrained Caffe model')
+parser.add_argument('--file', help='Path to the video file')
 parser.add_argument('--mean', '-m', default='ilsvrc_2012_mean.npy',
                     help='Path to the mean file')
 parser.add_argument('--gpu', '-g', type=int, default=-1,
@@ -129,7 +130,11 @@ faceCascade = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 video_capture = cv2.VideoCapture(0)
 font = cv2.FONT_HERSHEY_DUPLEX
 fontSize = 5
-cap = cv2.VideoCapture(0)
+cap = None
+if args.file != None:
+    cap = cv2.VideoCapture(args.file)
+else:
+    cap = cv2.VideoCapture(0)
 # Capture frame-by-frame
 while True:
     ret, frame = cap.read()
@@ -156,7 +161,7 @@ while True:
     # for (x, y, w, h) in faces:
     #     cropImage = frame[y:y+h ,x:x+w]
     #     result = predictImage(cropImage)
-    time.sleep(1)
+    # time.sleep(1)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
