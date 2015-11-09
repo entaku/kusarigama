@@ -16,6 +16,7 @@ from chainer.functions import caffe
 
 # Usage: python cnn_age_gender.py caffenet gender_net.caffemodel --mean mean.npy
 # Usage:  python cnn_age_gender.py caffenet age_net.caffemodel --mean mean.npy
+# Usage:  python cnn_age_gender_camera.py  caffenet  gender_net.caffemodel --file pk_low.mov --mean mean.npy
 
 parser = argparse.ArgumentParser(
     description='Evaluate a Caffe reference model on ILSVRC2012 dataset')
@@ -136,24 +137,33 @@ if args.file != None:
 else:
     cap = cv2.VideoCapture(0)
 # Capture frame-by-frame
+i = 0
+faces = None
+result = None
 while True:
+    i+=1
     ret, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = faceCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(30, 30),
-        flags=cv2.cv.CV_HAAR_SCALE_IMAGE
-    )
 
-    # Draw a rectangle around the faces
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cropImage = frame[y:y+h ,x:x+w]
-        result = predictImage(cropImage)
-        cv2.putText(frame,result,(x,y),font, fontSize,(255,255,0))
-
+    if i % 5 == 0:
+        i = 0
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = faceCascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+        )
+        # Draw a rectangle around the faces
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cropImage = frame[y:y+h ,x:x+w]
+            result = predictImage(cropImage)
+            cv2.putText(frame,result,(x,y),font, fontSize,(255,255,0))
+    elif faces != None:
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.putText(frame,result,(x,y),font, fontSize,(255,255,0))
     # Save the resulting frame
     # cv2.imwrite('face.png', frame)
     cv2.imshow('frame', frame)
