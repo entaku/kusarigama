@@ -24,10 +24,13 @@ parser.add_argument('model_type', choices=('alexnet', 'caffenet', 'googlenet'),
                     help='Model type (alexnet, caffenet, googlenet)')
 parser.add_argument('model', help='Path to the pretrained Caffe model')
 parser.add_argument('--file', help='Path to the video file')
-parser.add_argument('--mean', '-m', default='ilsvrc_2012_mean.npy',
+parser.add_argument('--mean', '-m', default='mean.npy',
                     help='Path to the mean file')
+parser.add_argument('--output', '-o',
+                    help='Path to the output file')
 parser.add_argument('--gpu', '-g', type=int, default=-1,
                     help='Zero-origin GPU ID (nevative value indicates CPU)')
+
 args = parser.parse_args()
 
 #Caffeモデルをロード
@@ -130,7 +133,7 @@ faceCascade = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 
 video_capture = cv2.VideoCapture(0)
 font = cv2.FONT_HERSHEY_DUPLEX
-fontSize = 5
+fontSize = 4
 cap = None
 if args.file != None:
     cap = cv2.VideoCapture(args.file)
@@ -140,10 +143,15 @@ else:
 i = 0
 faces = None
 result = None
-while True:
+# video recorder
+out = None
+if args.output != None:
+    fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+    out = cv2.VideoWriter(args.output, fourcc, 20, (640, 480))
+
+while cap.isOpened():
     i+=1
     ret, frame = cap.read()
-
     if i % 5 == 0:
         i = 0
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -159,21 +167,23 @@ while True:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cropImage = frame[y:y+h ,x:x+w]
             result = predictImage(cropImage)
-            cv2.putText(frame,result,(x,y),font, fontSize,(255,255,0))
+            cv2.putText(frame,result,(x,y),font, fontSize,(255,0,0))
     elif faces != None:
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(frame,result,(x,y),font, fontSize,(255,255,0))
+            cv2.putText(frame,result,(x,y),font, fontSize,(255,0,0))
     # Save the resulting frame
     # cv2.imwrite('face.png', frame)
     cv2.imshow('frame', frame)
+    if args.output != None:
+        frame = cv2.resize(frame, (640, 480))
+        out.write(frame)
 
-    # for (x, y, w, h) in faces:
-    #     cropImage = frame[y:y+h ,x:x+w]
-    #     result = predictImage(cropImage)
-    # time.sleep(1)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
 # When everything is done, release the capture
-video_capture.release()
+cap.release()
+if args.output != None:
+    out.release()
+cv2.destroyAllWindows()
